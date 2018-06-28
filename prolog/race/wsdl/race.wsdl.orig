@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<definitions name="RACE"
+	targetNamespace="http://attempto.ifi.uzh.ch/race"
+	xmlns:race="http://attempto.ifi.uzh.ch/race"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+    <types>
+       <schema
+           targetNamespace="http://attempto.ifi.uzh.ch/race"
+           xmlns="http://www.w3.org/2001/XMLSchema">
+           
+           <element name="Request">
+               <complexType>
+                   <all>
+                       <element name="Axioms" type="string" minOccurs="1" maxOccurs="1"/>
+                       <element name="Theorems" type="string" minOccurs="0" maxOccurs="1"/>
+                       <element name="Mode" minOccurs="1" maxOccurs="1">
+                         <simpleType><restriction base="string">
+                             <enumeration value="check_consistency"/>
+                             <enumeration value="prove"/>
+                             <enumeration value="answer_query"/>
+                         </restriction></simpleType>
+                       </element>
+                       <element name="Parameter" minOccurs="0" maxOccurs="unbounded">
+                         <simpleType><restriction base="string">
+                             <enumeration value="raw"/>
+                         </restriction></simpleType>
+                       </element>
+                   </all>
+               </complexType>
+           </element>
+           
+           <element name="Reply">
+              <complexType>
+                  <sequence>
+                      <element name="Message" minOccurs="0" maxOccurs="unbounded">
+                          <complexType>
+                              <all>
+                                  <element name="Importance" minOccurs="1" maxOccurs="1">
+                                      <simpleType><restriction base="string">
+                                          <enumeration value="warning"/>
+                                          <enumeration value="error"/>
+                                      </restriction></simpleType>
+                                  </element>
+                                  <element name="Type" type="string" minOccurs="1" maxOccurs="1"/>
+                                  <element name="SentenceID" type="string" minOccurs="1" maxOccurs="1"/>
+                                  <element name="Subject" type="string" minOccurs="1" maxOccurs="1"/>
+                                  <element name="Description" type="string" minOccurs="1" maxOccurs="1"/>
+                              </all>
+                          </complexType>
+                      </element>
+                      <element name="Runtime" type="int" minOccurs="1" maxOccurs="1"/>
+                      <element name="Proof" minOccurs="0" maxOccurs="unbounded">
+                         <complexType>
+                            <sequence>
+                               <element name="UsedAxioms" minOccurs="1" maxOccurs="1">
+                                  <complexType>
+                                     <sequence>
+                                        <element name="Axiom" type="string" minOccurs="0" maxOccurs="unbounded" />
+                                     </sequence>
+                                  </complexType>
+                               </element>
+                               <element name="UsedAuxAxioms" minOccurs="1" maxOccurs="1">
+                                  <complexType>
+                                     <sequence>
+                                        <element name="AuxAxiom" type="string" minOccurs="0" maxOccurs="unbounded" />
+                                     </sequence>
+                                  </complexType>
+                               </element>
+                            </sequence>
+                         </complexType>
+                      </element>
+                      <element name="WhyNot" minOccurs="0" maxOccurs="1">
+                         <complexType>
+                            <sequence>
+                               <element name="Word" type="string" minOccurs="0" maxOccurs="unbounded" />
+                            </sequence>
+                         </complexType>
+                      </element>
+                   </sequence>
+              </complexType>
+           </element>
+           
+       </schema>
+    </types>
+
+    <message name="RequestMessage">
+        <part name="body" element="race:Request"/>
+    </message>
+
+    <message name="ReplyMessage">
+        <part name="body" element="race:Reply"/>
+    </message>
+
+    <portType name="RacePortType">
+        <operation name="RunRace">
+           <input message="race:RequestMessage"/>
+           <output message="race:ReplyMessage"/>
+        </operation>
+    </portType>
+
+    <binding name="RaceSoapBinding" type="race:RacePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="RunRace">
+           <soap:operation soapAction="http://attempto.ifi.uzh.ch/race/Process"/>
+           <input>
+               <soap:body use="literal"/>
+           </input>
+           <output>
+               <soap:body use="literal"/>
+           </output>
+        </operation>
+    </binding>
+
+    <service name="RaceService">
+        <port name="RacePort" binding="race:RaceSoapBinding">
+           <soap:address location="http://attempto.ifi.uzh.ch/ws/race/racews.perl"/>
+        </port>
+    </service>
+
+</definitions>
