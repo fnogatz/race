@@ -26,7 +26,7 @@ First of all you have to load the library:
 ?- use_module(library(race)).
 ```
 
-### Consistency check
+### Consistency Check
 
 ```prolog
 ?- check_consistency("John is tall. Mary is tall. John is not tall.", Inconsistency).
@@ -36,7 +36,7 @@ Inconsistency = ["John is tall.", "John is not tall."].
 ### Question Answering
 
 ```prolog
-?- ask("Every man is a human. John is a man.", 'Is John a human?', Proof, WhyNot).
+?- ask("Every man is a human. John is a man.", "Is John a human?", Proof, WhyNot).
 Proof = ["Every man is a human.", "John is a man."],
 WhyNot = [].
 ```
