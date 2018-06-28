@@ -29,8 +29,7 @@ First of all you have to load the library:
 ### Consistency check
 
 ```prolog
-?- check_consistency("John is tall. Mary is tall. John is not tall.",
-      Inconsistency).
+?- check_consistency("John is tall. Mary is tall. John is not tall.", Inconsistency).
 Inconsistency = ["John is tall.", "John is not tall."].
 ```
 
