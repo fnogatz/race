@@ -10,6 +10,14 @@ This package requires [`library(wsdl)`](http://www.swi-prolog.org/pack/list?p=ws
 ?- pack_install(wsdl).
 ```
 
+Then, you can install this package by calling:
+
+```prolog
+?- pack_install('https://github.com/fnogatz/race.git').
+```
+
+As of now, this package has not been published in SWI-Prolog's [packs list](http://www.swi-prolog.org/pack/list), so `pack_install(race)` is not yet supported.
+
 ## Examples
 
 ```prolog
