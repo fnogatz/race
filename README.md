@@ -29,16 +29,47 @@ First of all you have to load the library:
 ### Consistency Check
 
 ```prolog
+%% check_consistency(+Knowledge)
+?- check_consistency("John is great. He is not great.").
+false.
+
+%% check_consinstency(+Knowledge, -Inconsistencies)
 ?- check_consistency("John is tall. Mary is tall. John is not tall.", Inconsistency).
-Inconsistency = ["John is tall.", "John is not tall."].
+Inconsistency = [fact("John is tall."), fact("John is not tall.")].
 ```
 
 ### Question Answering
 
 ```prolog
-?- ask("Every man is a human. John is a man.", "Is John a human?", Proof, WhyNot).
-Proof = ["Every man is a human.", "John is a man."],
-WhyNot = [].
+%% ask(+Knowledge, +Question, -Result)
+?- ask("Every man is a human. John is a man.", "Who is a human?", Result).
+Result = results([
+   proof([
+      fact("Every man is a human."),
+      fact("John is a man."),
+      substitution("who", "John")
+   ]),
+   proof([
+      fact("Every man is a human."),
+      fact("John is a man."),
+      substitution("who", "(at least 1) man")
+   ])
+]).
+```
+
+### Theorem Proving
+
+```prolog
+%% prove(+Knowledge, +Theorem, -Result)
+?- prove("John likes Mary. If A likes B then B likes A.", "Mary likes John.", Result).
+Result = results([
+   proof([
+      fact("John likes Mary."),
+      fact("If A likes B then B likes A."),
+      substitution("something", "John"),
+      substitution("something", "Mary")
+   ])
+]).
 ```
 
 ## Background

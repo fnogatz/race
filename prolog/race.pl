@@ -1,8 +1,11 @@
 :- module(race, [
       check_consistency/1,
       check_consistency/2,
-      ask/4
+      ask/3,
+      prove/3
    ]).
+
+:- use_module(library(race/axiom)).
 
 :- use_module(library(wsdl)).
 :- use_module(library(xpath)).
@@ -21,7 +24,7 @@
 check_consistency(Knowledge) :-
    check_consistency(Knowledge, []).
 
-check_consistency(Knowledge, Proof) :-
+check_consistency(Knowledge, Result) :-
    Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
                ('http://attempto.ifi.uzh.ch/race':'RunRace'),
    soap_call(Operation, [
@@ -29,45 +32,59 @@ check_consistency(Knowledge, Proof) :-
       'Mode'='check_consistency'
       %, 'Parameter'='raw'
    ], [ReplyDOM], [dom]),
-   ( xpath(ReplyDOM, //(_:'Proof'), ProofDOM) ->
-     proof(ProofDOM, Proof)
-   ; Proof = [] ),
-   !.
+   get_inconsistencies(ReplyDOM, Result).
 
-ask(Knowledge, Question, Proof, WhyNot) :-
+ask(Knowledge, Question, Result) :-
    Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
                ('http://attempto.ifi.uzh.ch/race':'RunRace'),
    soap_call(Operation, [
       'Axioms'=Knowledge,
       'Mode'='answer_query',
       'Theorems'=Question
-      %, 'Parameter'='raw'
+      % , 'Parameter'='raw'
    ], ReplyDOM, [dom]),
-   ( xpath(ReplyDOM, //(_:'WhyNot'), WhyNotDOM) ->
-     why_not(WhyNotDOM, WhyNot)
-   ; WhyNot = [] ),
-   ( xpath(ReplyDOM, //(_:'Proof'), ProofDOM) ->
-     proof(ProofDOM, Proof)
-   ; Proof = [] ),
-   !.
+   get_result(ReplyDOM, Result).
 
-proof(ProofDOM, Proof) :-
-   findall(Text, (xpath(ProofDOM, //(_:'Axiom'), element(_, _, [Text]))), Texts),
-   remove_enumerates(Texts, Proof).
+prove(Knowledge, Theorem, Result) :-
+   Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
+               ('http://attempto.ifi.uzh.ch/race':'RunRace'),
+   soap_call(Operation, [
+      'Axioms'=Knowledge,
+      'Mode'='prove',
+      'Theorems'=Theorem
+      % , 'Parameter'='raw'
+   ], ReplyDOM, [dom]),
+   get_result(ReplyDOM, Result).
 
-remove_enumerates(Texts, Proof) :-
-   maplist(remove_enumerate, Texts, Proof).
+get_inconsistencies(ReplyDOM, Result) :-
+   findall(Axiom, xpath_select(ReplyDOM, 'Axiom', element(_, _, [Axiom])), Axioms),
+   maplist(axiom_to_entity, Axioms, Result).
 
-remove_enumerate(Text, P) :-
-   string_codes(Text, Codes),
-   string_codes(': ', ColonList),
-   append(ColonList, Rest, RestWithColonList),
-   append(_LineNumberList, RestWithColonList, Codes),
-   string_codes(P, Rest).
+get_result(ReplyDOM, Result) :-
+   findall(ProofDOM, xpath_select(ReplyDOM, 'Proof', ProofDOM), ProofDOMs),
+   findall(WhyNotDOM, xpath_select(ReplyDOM, 'WhyNot', WhyNotDOM), WhyNotDOMs),
+   ( ( ProofDOMs \= [], WhyNotDOMs = []) ->
+     proof_list(ProofDOMs, Proof),
+     Result = results(Proof)
+   ; ( ProofDOMs = [], WhyNotDOMs \= []) ->
+     why_not_list(WhyNotDOMs, WhyNot),
+     Result = not(WhyNot)
+   ; Result = error('Sorry, there are arguments for both sides.')).
 
-why_not(element(_, _, []), []) :- !.
-why_not(_, [whynot]).
+proof_list(ProofDOMs, Result) :-
+   maplist(proof, ProofDOMs, Result).
 
+proof(ProofDOM, proof(Entities)) :-
+   findall(Axiom, xpath_select(ProofDOM, 'Axiom', element(_, _, [Axiom])), Axioms),
+   maplist(axiom_to_entity, Axioms, Entities).
+
+why_not_list([WhyNotDOM], Entities) :-
+   findall(Word, xpath_select(WhyNotDOM, 'Word', element(_, _, [Word])), Words),
+   maplist(axiom_to_entity, Words, Entities).
+
+xpath_select(DOM, Element, Result) :-
+   xpath(DOM, //(_:Element), Result),
+   Result \= element(_, _, []).
 
 :- meta_predicate soap_call(:, +, -, +).
 soap_call(Operation, Input, Reply, Options) :-
@@ -106,6 +123,8 @@ soap_call(Operation, Input, Reply, Options) :-
      Reply = ReplyDOM
    ; soap:soap_reply(Code, SoapPrefix, ReplyDOM, OutputElements, M, Reply)).
 
+
 % just for debugging purposes
 pp(Term) :-
-   print_term(Term, []).
+   print_term(Term, []),
+   nl.
