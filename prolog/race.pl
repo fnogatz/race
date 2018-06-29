@@ -2,8 +2,9 @@
       check_consistency/1,
       check_consistency/2,
       ask/3,
-      ask_for_answers/3,
-      prove/3
+      ask_with_answers/3,
+      prove/3,
+      prove_with_answers/3
    ]).
 
 :- use_module(library(race/axiom)).
@@ -48,7 +49,7 @@ ask(Knowledge, Question, Result) :-
    ], ReplyDOM, [dom]),
    get_result(ReplyDOM, Result).
 
-ask_for_answers(Knowledge, Question, Result) :-
+ask_with_answers(Knowledge, Question, Result) :-
    ask(Knowledge, Question, R),
    ( R = results(Proofs) ->
      maplist(generate_answer, Proofs, Answers),
@@ -68,6 +69,16 @@ prove(Knowledge, Theorem, Result) :-
       % , 'Parameter'='raw'
    ], ReplyDOM, [dom]),
    get_result(ReplyDOM, Result).
+
+prove_with_answers(Knowledge, Theorem, Result) :-
+   prove(Knowledge, Theorem, R),
+   ( R = results(Proofs) ->
+     maplist(generate_answer, Proofs, Answers),
+     Result = results(Answers)
+   ; R = not(WhyNot) ->
+     generate_answer(not(WhyNot), Answer),
+     Result = not(Answer)
+   ; Result = R).
 
 get_inconsistencies(ReplyDOM, Result) :-
    findall(Axiom, xpath_select(ReplyDOM, 'Axiom', element(_, _, [Axiom])), Axioms),
