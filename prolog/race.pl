@@ -2,10 +2,13 @@
       check_consistency/1,
       check_consistency/2,
       ask/3,
+      ask_for_answers/3,
       prove/3
    ]).
 
 :- use_module(library(race/axiom)).
+:- use_module(library(race/sentence)).
+:- use_module(library(race/util)).
 
 :- use_module(library(wsdl)).
 :- use_module(library(xpath)).
@@ -44,6 +47,16 @@ ask(Knowledge, Question, Result) :-
       % , 'Parameter'='raw'
    ], ReplyDOM, [dom]),
    get_result(ReplyDOM, Result).
+
+ask_for_answers(Knowledge, Question, Result) :-
+   ask(Knowledge, Question, R),
+   ( R = results(Proofs) ->
+     maplist(generate_answer, Proofs, Answers),
+     Result = results(Answers)
+   ; R = not(WhyNot) ->
+     generate_answer(not(WhyNot), Answer),
+     Result = not(Answer)
+   ; Result = R).
 
 prove(Knowledge, Theorem, Result) :-
    Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
@@ -122,9 +135,3 @@ soap_call(Operation, Input, Reply, Options) :-
    ( memberchk(dom, Options) ->
      Reply = ReplyDOM
    ; soap:soap_reply(Code, SoapPrefix, ReplyDOM, OutputElements, M, Reply)).
-
-
-% just for debugging purposes
-pp(Term) :-
-   print_term(Term, []),
-   nl.

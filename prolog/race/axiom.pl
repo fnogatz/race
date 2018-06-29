@@ -25,4 +25,8 @@ axiom_to_entity(Axiom, countable_noun(E)) :-
    string_concat("countable common noun: ", E, Axiom),
    !.
 
+axiom_to_entity(Axiom, mass_common_noun(E)) :-
+   string_concat("mass common noun: ", E, Axiom),
+   !.
+
 axiom_to_entity(Axiom, axiom(Axiom)) :- !.
