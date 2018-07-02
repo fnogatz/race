@@ -57,6 +57,16 @@ Result = results([
 ]).
 ```
 
+By calling `ask_with_answers/3` instead, it will return a textual response instead. It can be used in sentences like *this can be answered with ...*:
+
+```prolog
+?- ask_with_answers("Every man is a human. John is a man.", "Who is a human?", Result).
+Result = results([
+   "who as John and the known fact that Every man is a human and the known fact that John is a man",
+   "who as (at least 1) man and the known fact that Every man is a human and the known fact that John is a man"
+]).
+```
+
 ### Theorem Proving
 
 ```prolog
@@ -69,6 +79,15 @@ Result = results([
       substitution("something", "John"),
       substitution("something", "Mary")
    ])
+]).
+```
+
+Use `prove_with_answers/3` to get a textual response instead. It can be used in sentences like *this can be proven with ...*:
+
+```prolog
+?- prove_with_answers("John likes Mary. If A likes B then B likes A.", "Mary likes John.", Result).
+Result = results([
+   "something as John and something as Mary and the known fact that John likes Mary and the known fact that If A likes B then B likes A"
 ]).
 ```
 
