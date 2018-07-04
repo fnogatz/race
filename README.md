@@ -33,15 +33,16 @@ First of all you have to load the library:
 ?- check_consistency("John is great. He is not great.").
 false.
 
-%% check_consinstency(+Knowledge, -Inconsistencies)
-?- check_consistency("John is tall. Mary is tall. John is not tall.", Inconsistency).
-Inconsistency = [fact("John is tall."), fact("John is not tall.")].
+%% check_consistency(+Knowledge, -Inconsistencies)
+?- check_consistency("John is tall. Mary is tall. John is not tall.", Inconsistencies).
+Inconsistencies = [fact("John is tall."), fact("John is not tall.")].
 ```
 
 ### Question Answering
 
 ```prolog
 %% ask(+Knowledge, +Question, -Result)
+%% ask(+Knowledge, +Question, -Result, +Options)
 ?- ask("Every man is a human. John is a man.", "Who is a human?", Result).
 Result = results([
    proof([
@@ -57,10 +58,10 @@ Result = results([
 ]).
 ```
 
-By calling `ask_with_answers/3` instead, it will return a textual response instead. It can be used in sentences like *this can be answered with ...*:
+By using the option `sentence(true)`, it will return a textual response instead. It can be used in sentences like *this can be answered with ...*:
 
 ```prolog
-?- ask_with_answers("Every man is a human. John is a man.", "Who is a human?", Result).
+?- ask("Every man is a human. John is a man.", "Who is a human?", Result, [sentence(true)]).
 Result = results([
    "who as John and the known fact that Every man is a human and the known fact that John is a man",
    "who as (at least 1) man and the known fact that Every man is a human and the known fact that John is a man"
@@ -71,6 +72,7 @@ Result = results([
 
 ```prolog
 %% prove(+Knowledge, +Theorem, -Result)
+%% prove(+Knowledge, +Theorem, -Result, +Options)
 ?- prove("John likes Mary. If A likes B then B likes A.", "Mary likes John.", Result).
 Result = results([
    proof([
@@ -82,10 +84,10 @@ Result = results([
 ]).
 ```
 
-Use `prove_with_answers/3` to get a textual response instead. It can be used in sentences like *this can be proven with ...*:
+Use `sentence(true)` in `Options` to get a textual response instead. It can be used in sentences like *this can be proven with ...*:
 
 ```prolog
-?- prove_with_answers("John likes Mary. If A likes B then B likes A.", "Mary likes John.", Result).
+?- prove("John likes Mary. If A likes B then B likes A.", "Mary likes John.", Result, [sentence(true)]).
 Result = results([
    "something as John and something as Mary and the known fact that John likes Mary and the known fact that If A likes B then B likes A"
 ]).

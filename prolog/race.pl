@@ -2,8 +2,10 @@
       check_consistency/1,
       check_consistency/2,
       ask/3,
+      ask/4,
       ask_with_answers/3,
       prove/3,
+      prove/4,
       prove_with_answers/3
    ]).
 
@@ -39,6 +41,9 @@ check_consistency(Knowledge, Result) :-
    get_inconsistencies(ReplyDOM, Result).
 
 ask(Knowledge, Question, Result) :-
+   ask(Knowledge, Question, Result, []).
+
+ask(Knowledge, Question, Result, Options) :-
    Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
                ('http://attempto.ifi.uzh.ch/race':'RunRace'),
    soap_call(Operation, [
@@ -47,19 +52,24 @@ ask(Knowledge, Question, Result) :-
       'Theorems'=Question
       % , 'Parameter'='raw'
    ], ReplyDOM, [dom]),
-   get_result(ReplyDOM, Result).
-
-ask_with_answers(Knowledge, Question, Result) :-
-   ask(Knowledge, Question, R),
-   ( R = results(Proofs) ->
-     maplist(generate_answer, Proofs, Answers),
-     Result = results(Answers)
-   ; R = not(WhyNot) ->
-     generate_answer(not(WhyNot), Answer),
-     Result = not(Answer)
+   get_result(ReplyDOM, R, Options),
+   ( memberchk(sentence(true), Options) ->
+      ( R = results(Proofs) ->
+        maplist(generate_answer, Proofs, Answers),
+        Result = results(Answers)
+      ; R = not(WhyNot) ->
+        generate_answer(not(WhyNot), Answer),
+        Result = not(Answer)
+      ; Result = R)
    ; Result = R).
 
+ask_with_answers(Knowledge, Question, Result) :-
+   ask(Knowledge, Question, Result, [sentence(true)]).
+
 prove(Knowledge, Theorem, Result) :-
+   prove(Knowledge, Theorem, Result, []).
+
+prove(Knowledge, Theorem, Result, Options) :-
    Operation = ('http://attempto.ifi.uzh.ch/race':'RacePortType') /
                ('http://attempto.ifi.uzh.ch/race':'RunRace'),
    soap_call(Operation, [
@@ -68,23 +78,25 @@ prove(Knowledge, Theorem, Result) :-
       'Theorems'=Theorem
       % , 'Parameter'='raw'
    ], ReplyDOM, [dom]),
-   get_result(ReplyDOM, Result).
+   get_result(ReplyDOM, R, Options),
+   ( memberchk(sentence(true), Options) ->
+      ( R = results(Proofs) ->
+        maplist(generate_answer, Proofs, Answers),
+        Result = results(Answers)
+      ; R = not(WhyNot) ->
+        generate_answer(not(WhyNot), Answer),
+        Result = not(Answer)
+      ; Result = R)
+   ; Result = R).
 
 prove_with_answers(Knowledge, Theorem, Result) :-
-   prove(Knowledge, Theorem, R),
-   ( R = results(Proofs) ->
-     maplist(generate_answer, Proofs, Answers),
-     Result = results(Answers)
-   ; R = not(WhyNot) ->
-     generate_answer(not(WhyNot), Answer),
-     Result = not(Answer)
-   ; Result = R).
+   prove(Knowledge, Theorem, Result, [sentence(true)]).
 
 get_inconsistencies(ReplyDOM, Result) :-
    findall(Axiom, xpath_select(ReplyDOM, 'Axiom', element(_, _, [Axiom])), Axioms),
    maplist(axiom_to_entity, Axioms, Result).
 
-get_result(ReplyDOM, Result) :-
+get_result(ReplyDOM, Result, _Options) :-
    findall(ProofDOM, xpath_select(ReplyDOM, 'Proof', ProofDOM), ProofDOMs),
    findall(WhyNotDOM, xpath_select(ReplyDOM, 'WhyNot', WhyNotDOM), WhyNotDOMs),
    ( ( ProofDOMs \= [], WhyNotDOMs = []) ->
