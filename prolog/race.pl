@@ -93,6 +93,13 @@ prove_with_answers(Knowledge, Theorem, Result) :-
    prove(Knowledge, Theorem, Result, [sentence(true)]).
 
 get_inconsistencies(ReplyDOM, Result) :-
+   xpath_select(ReplyDOM, 'Message', FirstMessage),
+   FirstMessage = element(_, _, Elements),
+   !,
+   member(element(_:'Subject', _, [Subject]), Elements),
+   Result = error(Subject).
+
+get_inconsistencies(ReplyDOM, Result) :-
    findall(Axiom, xpath_select(ReplyDOM, 'Axiom', element(_, _, [Axiom])), Axioms),
    maplist(axiom_to_entity, Axioms, Result).
 
@@ -105,7 +112,9 @@ get_result(ReplyDOM, Result, _Options) :-
    ; ( ProofDOMs = [], WhyNotDOMs \= []) ->
      why_not_list(WhyNotDOMs, WhyNot),
      Result = not(WhyNot)
-   ; Result = error('Sorry, there are arguments for both sides.')).
+   ; (xpath_select(ReplyDOM, 'Message', MessageDOM), MessageDOM \= []) ->
+     Result = error('Sorry, this sentence was not in ACE.')
+   ; Result = error('Sorry, there were some errors.')).
 
 proof_list(ProofDOMs, Result) :-
    maplist(proof, ProofDOMs, Result).
