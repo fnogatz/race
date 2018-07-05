@@ -95,8 +95,9 @@ prove_with_answers(Knowledge, Theorem, Result) :-
 get_inconsistencies(ReplyDOM, Result) :-
    xpath_select(ReplyDOM, 'Message', FirstMessage),
    FirstMessage = element(_, _, Elements),
-   !,
    member(element(_:'Subject', _, [Subject]), Elements),
+   Subject = 'Axioms cannot be parsed.',
+   !,
    Result = error(Subject).
 
 get_inconsistencies(ReplyDOM, Result) :-
