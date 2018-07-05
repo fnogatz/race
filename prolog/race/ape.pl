@@ -4,7 +4,6 @@
       prove_with_answers/3
    ]).
 :- reexport('../race', except([
-      check_consistency/2,
       prove_with_answers/3,
       ask_with_answers/3
    ])).
